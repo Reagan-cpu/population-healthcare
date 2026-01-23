@@ -25,6 +25,10 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Server is running' });
 });
 
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'OK', message: 'API is running' });
+});
+
 // --- General Health Surveys Endpoints ---
 
 app.get('/api/general-surveys', async (req, res) => {
@@ -92,12 +96,10 @@ app.post('/api/anc-surveys', async (req, res) => {
             anc_details // This contains lmp_date, children_no, etc.
         } = req.body;
 
-        // Flatten anc_details for the table (optional, or store as JSONB)
-        // User asked for 2 tables, let's store fields directly for better SQL queryability
         const {
             lmp_date, children_no, pregnancy_month, anc_visits,
             tetanus_injection, iron_supplements, sam_status, mam_status, thalassemia_status
-        } = anc_details;
+        } = anc_details || {};
 
         const { data, error } = await supabase
             .from('anc_surveys')
@@ -117,6 +119,12 @@ app.post('/api/anc-surveys', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// Start server locally
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
+
+// Export for Vercel serverless functions
+module.exports = app;
