@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { supabase } from '../lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Users, ShieldCheck, Database, Search, Activity, Sparkles, AlertTriangle } from 'lucide-react';
 
@@ -12,9 +12,13 @@ const AdminDashboard = () => {
     const fetchData = async () => {
         try {
             const [genRes, ancRes] = await Promise.all([
-                axios.get('/api/general-surveys'),
-                axios.get('/api/anc-surveys')
+                supabase.from('general_surveys').select('*').order('created_at', { ascending: false }),
+                supabase.from('anc_surveys').select('*').order('created_at', { ascending: false })
             ]);
+
+            if (genRes.error) throw genRes.error;
+            if (ancRes.error) throw ancRes.error;
+
             setGeneralData(genRes.data);
             setAntenatalData(ancRes.data);
         } catch (error) {

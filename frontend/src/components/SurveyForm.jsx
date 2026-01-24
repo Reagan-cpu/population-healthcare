@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { supabase } from '../lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Loader2, User, BookOpen, Baby, ShieldCheck, HeartPulse, Sparkles, AlertCircle } from 'lucide-react';
 
 const SurveyForm = ({ onSuccess }) => {
+    // ... (rest of the component state remains same)
     const [surveyType, setSurveyType] = useState('general'); // 'general' or 'antenatal'
     const [formData, setFormData] = useState({
         full_name: '',
@@ -71,13 +72,59 @@ const SurveyForm = ({ onSuccess }) => {
         setMessage({ type: '', text: '' });
 
         try {
-            const endpoint = surveyType === 'general' ? '/api/general-surveys' : '/api/anc-surveys';
-            await axios.post(endpoint, formData);
+            let error;
+            if (surveyType === 'general') {
+                const { error: err } = await supabase
+                    .from('general_surveys')
+                    .insert([{
+                        full_name: formData.full_name,
+                        dob: formData.dob,
+                        age: formData.age,
+                        gender: formData.gender,
+                        adhar_number: formData.adhar_number,
+                        diseases: formData.diseases,
+                        education: formData.education,
+                        caste: formData.caste,
+                        pregnant_woman_present: formData.pregnant_woman_present,
+                        mobile_no: formData.mobile_no,
+                        kids_info: formData.kids_info
+                    }]);
+                error = err;
+            } else {
+                const { lmp_date, children_no, pregnancy_month, anc_visits, tetanus_injection, iron_supplements, sam_status, mam_status, thalassemia_status } = formData.anc_details;
+                const { error: err } = await supabase
+                    .from('anc_surveys')
+                    .insert([{
+                        full_name: formData.full_name,
+                        dob: formData.dob,
+                        age: formData.age,
+                        gender: formData.gender,
+                        adhar_number: formData.adhar_number,
+                        diseases: formData.diseases,
+                        education: formData.education,
+                        caste: formData.caste,
+                        mobile_no: formData.mobile_no,
+                        lmp_date,
+                        children_no,
+                        pregnancy_month,
+                        anc_visits,
+                        tetanus_injection,
+                        iron_supplements,
+                        sam_status,
+                        mam_status,
+                        thalassemia_status
+                    }]);
+                error = err;
+            }
+
+            if (error) throw error;
+
             setMessage({ type: 'success', text: 'Survey submitted successfully! Data saved to specialized table.' });
             resetForm();
             if (onSuccess) onSuccess();
         } catch (error) {
-            setMessage({ type: 'error', text: 'Failed to submit survey. Please verify backend connection.' });
+            console.error('Submission error:', error);
+            setMessage({ type: 'error', text: 'Failed to submit survey. Please verify Supabase connection.' });
         } finally {
             setLoading(false);
         }
