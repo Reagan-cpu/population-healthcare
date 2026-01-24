@@ -1,63 +1,121 @@
 import React, { useState } from 'react';
 import SurveyForm from './components/SurveyForm';
 import AdminDashboard from './components/AdminDashboard';
-import { Activity } from 'lucide-react';
+import { Activity, ClipboardList, LayoutDashboard } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function App() {
     const [view, setView] = useState('survey'); // 'survey' or 'admin'
 
     return (
-        <div className="app-container">
+        <div className="app-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
             <nav style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '20px 40px',
-                backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                backdropFilter: 'blur(8px)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+                padding: '16px 40px',
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(12px)',
+                borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
                 position: 'sticky',
                 top: 0,
-                zIndex: 100
+                zIndex: 100,
+                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.02)'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#3b82f6' }}>
-                    <Activity size={28} strokeWidth={2.5} />
-                    <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#1e293b' }}>HealthPulse</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }} onClick={() => setView('survey')}>
+                    <div style={{
+                        backgroundColor: '#3b82f6',
+                        padding: '8px',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
+                    }}>
+                        <Activity size={24} color="white" />
+                    </div>
+                    <span style={{ fontWeight: '800', fontSize: '1.4rem', color: '#1e293b', letterSpacing: '-0.02em' }}>HealthPulse</span>
                 </div>
 
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
+                <div style={{
+                    display: 'flex',
+                    gap: '4px',
+                    backgroundColor: '#f1f5f9',
+                    padding: '4px',
+                    borderRadius: '14px'
+                }}>
+                    <NavButton
+                        active={view === 'survey'}
                         onClick={() => setView('survey')}
-                        className={`btn ${view === 'survey' ? 'btn-primary' : ''}`}
-                        style={{ backgroundColor: view === 'survey' ? '#3b82f6' : 'transparent', color: view === 'survey' ? 'white' : '#64748b' }}
-                    >
-                        Take Survey
-                    </button>
-                    <button
+                        icon={<ClipboardList size={18} />}
+                        label="Take Survey"
+                    />
+                    <NavButton
+                        active={view === 'admin'}
                         onClick={() => setView('admin')}
-                        className={`btn ${view === 'admin' ? 'btn-primary' : ''}`}
-                        style={{ backgroundColor: view === 'admin' ? '#3b82f6' : 'transparent', color: view === 'admin' ? 'white' : '#64748b' }}
-                    >
-                        Admin View
-                    </button>
+                        icon={<LayoutDashboard size={18} />}
+                        label="Admin Dashboard"
+                    />
                 </div>
             </nav>
 
-            <main style={{ padding: '20px' }}>
-                {view === 'survey' ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '40px' }}>
-                        <SurveyForm onSuccess={() => { }} />
-                    </div>
-                ) : (
-                    <AdminDashboard />
-                )}
+            <main style={{ flex: 1, padding: '40px 20px' }}>
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={view}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                    >
+                        {view === 'survey' ? (
+                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                <SurveyForm onSuccess={() => { }} />
+                            </div>
+                        ) : (
+                            <AdminDashboard />
+                        )}
+                    </motion.div>
+                </AnimatePresence>
             </main>
 
-            <footer style={{ textAlign: 'center', padding: '40px', color: '#94a3b8', fontSize: '0.9rem' }}>
-                &copy; 2024 HealthPulse Population Dataset. All rights reserved.
+            <footer style={{
+                textAlign: 'center',
+                padding: '40px',
+                color: '#94a3b8',
+                fontSize: '0.9rem',
+                borderTop: '1px solid rgba(0, 0, 0, 0.05)',
+                marginTop: '60px'
+            }}>
+                &copy; 2024 HealthPulse Population Dataset.
+                <span style={{ marginLeft: '10px', color: '#cbd5e1' }}>|</span>
+                <span style={{ marginLeft: '10px' }}>State Health Infrastructure Development</span>
             </footer>
         </div>
     );
 }
+
+const NavButton = ({ active, onClick, icon, label }) => (
+    <button
+        onClick={onClick}
+        style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 20px',
+            borderRadius: '11px',
+            border: 'none',
+            backgroundColor: active ? 'white' : 'transparent',
+            color: active ? '#3b82f6' : '#64748b',
+            fontWeight: active ? '700' : '500',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: active ? '0 2px 8px -2px rgba(0,0,0,0.1)' : 'none'
+        }}
+    >
+        {icon}
+        <span style={{ fontSize: '0.95rem' }}>{label}</span>
+    </button>
+);
 
 export default App;
