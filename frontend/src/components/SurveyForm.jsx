@@ -274,7 +274,7 @@ const SurveyForm = ({ onSuccess }) => {
                         </div>
 
                         <div className="form-group">
-                            <label>Landmark</label>
+                            <label>House No./Landmark</label>
                             <input name="house_number" value={familyData.house_number} onChange={handleFamilyChange} required placeholder="Building/Door No." />
                         </div>
 

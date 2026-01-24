@@ -152,22 +152,24 @@ const AdminDashboard = () => {
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '25px' }}>
-                                {villages.map(village => (
-                                    <div
-                                        key={village}
-                                        className="glass-card"
-                                        onClick={() => pushView('households', village, village)}
-                                        style={{ padding: '30px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                                    >
-                                        <div>
-                                            <h3 style={{ margin: 0 }}>{village}</h3>
-                                            <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>
-                                                {households.filter(h => h.village === village).length} Households
-                                            </p>
+                                {villages
+                                    .filter(v => v.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    .map(village => (
+                                        <div
+                                            key={village}
+                                            className="glass-card"
+                                            onClick={() => pushView('households', village, village)}
+                                            style={{ padding: '30px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                        >
+                                            <div>
+                                                <h3 style={{ margin: 0 }}>{village}</h3>
+                                                <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>
+                                                    {households.filter(h => h.village === village).length} Households
+                                                </p>
+                                            </div>
+                                            <ChevronRight color="#3b82f6" />
                                         </div>
-                                        <ChevronRight color="#3b82f6" />
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
                         </>
                     )}
@@ -185,53 +187,56 @@ const AdminDashboard = () => {
                                     <thead style={{ backgroundColor: '#f8fafc' }}>
                                         <tr>
                                             <th style={thStyle}>House No.</th>
-                                            <th style={thStyle}>Head Name</th>
+                                            <th style={thStyle}>Family Head Name</th>
                                             <th style={thStyle}>Family Count</th>
-                                            <th style={thStyle}>Contact</th>
+                                            <th style={thStyle}>Phone No.</th>
+                                            <th style={thStyle}>Pregnant Member Present?</th>
                                             <th style={thStyle}>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {households.filter(h => h.village === currentNav.id).map(house => {
-                                            const hasPregnant = house.household_members?.some(m => m.pregnant);
-                                            return (
-                                                <tr key={house.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                                    <td style={tdStyle}>{house.house_number}</td>
-                                                    <td style={tdStyle}>{house.head_name}</td>
-                                                    <td style={tdStyle}>{house.household_members?.length || 0} Members</td>
-                                                    <td style={tdStyle}>{house.family_mobile}</td>
-                                                    <td style={tdStyle}>
-                                                        {hasPregnant ? (
-                                                            <span style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: '4px',
-                                                                color: '#8b5cf6',
-                                                                fontSize: '0.75rem',
-                                                                fontWeight: '700',
-                                                                backgroundColor: '#f5f3ff',
-                                                                padding: '4px 8px',
-                                                                borderRadius: '6px',
-                                                                width: 'fit-content'
-                                                            }}>
-                                                                <Sparkles size={12} /> ANC ACTIVE
-                                                            </span>
-                                                        ) : (
-                                                            <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Regular</span>
-                                                        )}
-                                                    </td>
-                                                    <td style={tdStyle}>
-                                                        <button
-                                                            className="btn btn-primary"
-                                                            style={{ padding: '8px 16px', fontSize: '0.85rem' }}
-                                                            onClick={() => pushView('residents', house.id, `House ${house.house_number}`)}
-                                                        >
-                                                            View Profile
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
+                                        {households
+                                            .filter(h => h.village === currentNav.id)
+                                            .filter(h =>
+                                                h.head_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                                h.house_number.toLowerCase().includes(searchTerm.toLowerCase())
+                                            )
+                                            .map(house => {
+                                                const hasPregnant = house.household_members?.some(m => m.pregnant);
+                                                return (
+                                                    <tr key={house.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                        <td style={tdStyle}>{house.house_number}</td>
+                                                        <td style={tdStyle}>{house.head_name}</td>
+                                                        <td style={tdStyle}>{house.household_members?.length || 0} Members</td>
+                                                        <td style={tdStyle}>{house.family_mobile}</td>
+                                                        <td style={tdStyle}>
+                                                            {hasPregnant ? (
+                                                                <span style={{
+                                                                    color: '#16a34a',
+                                                                    fontSize: '0.85rem',
+                                                                    fontWeight: '700',
+                                                                    backgroundColor: '#f0fdf4',
+                                                                    padding: '4px 12px',
+                                                                    borderRadius: '6px',
+                                                                }}>
+                                                                    Yes
+                                                                </span>
+                                                            ) : (
+                                                                <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>No</span>
+                                                            )}
+                                                        </td>
+                                                        <td style={tdStyle}>
+                                                            <button
+                                                                className="btn btn-primary"
+                                                                style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                                                                onClick={() => pushView('residents', house.id, `House ${house.house_number}`)}
+                                                            >
+                                                                View Profile
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                     </tbody>
                                 </table>
                             </div>
@@ -247,63 +252,131 @@ const AdminDashboard = () => {
                                 <h3 style={{ margin: 0 }}>Residents of {currentNav.label}</h3>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '25px' }}>
-                                {households.find(h => h.id === currentNav.id).household_members?.map((member) => (
-                                    <div key={member.id} className="glass-card" style={{ padding: '30px', position: 'relative' }}>
-                                        {member.pregnant && (
-                                            <div style={{
-                                                position: 'absolute',
-                                                top: '20px',
-                                                right: '20px',
-                                                backgroundColor: '#f5f3ff',
-                                                color: '#8b5cf6',
-                                                padding: '6px 12px',
-                                                borderRadius: '8px',
-                                                fontSize: '0.75rem',
-                                                fontWeight: 'bold',
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '30px' }}>
+                                {households
+                                    .find(h => h.id === currentNav.id).household_members
+                                    ?.filter(m => m.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    .map((member) => (
+                                        <motion.div
+                                            key={member.id}
+                                            whileHover={{ y: -5 }}
+                                            className="glass-card"
+                                            style={{
+                                                padding: '32px',
+                                                position: 'relative',
+                                                border: '1px solid #e2e8f0',
+                                                background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+                                                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)',
                                                 display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '6px'
+                                                flexDirection: 'column',
+                                                gap: '24px'
+                                            }}
+                                        >
+                                            {member.pregnant && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '20px',
+                                                    right: '20px',
+                                                    backgroundColor: '#f5f3ff',
+                                                    color: '#8b5cf6',
+                                                    padding: '6px 14px',
+                                                    borderRadius: '10px',
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: '800',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '6px',
+                                                    border: '1px solid #ddd6fe',
+                                                    boxShadow: '0 2px 4px rgba(139, 92, 246, 0.1)'
+                                                }}>
+                                                    <Sparkles size={14} /> Pregnant
+                                                </div>
+                                            )}
+
+                                            {/* Profile Header */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                                <div style={{
+                                                    backgroundColor: '#f1f5f9',
+                                                    width: '64px',
+                                                    height: '64px',
+                                                    borderRadius: '18px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
+                                                }}>
+                                                    <User size={32} color="#64748b" />
+                                                </div>
+                                                <div>
+                                                    <h4 style={{ margin: '0 0 4px 0', fontSize: '1.25rem', fontWeight: '800', color: '#1e293b' }}>{member.full_name}</h4>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>
+                                                        <span style={{ color: '#3b82f6', fontWeight: '700' }}>{member.relation_to_head}</span>
+                                                        <span style={{ color: '#cbd5e1' }}>•</span>
+                                                        <span>{member.age} yrs</span>
+                                                        <span style={{ color: '#cbd5e1' }}>•</span>
+                                                        <span>{member.gender}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Info Grid */}
+                                            <div style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: '1fr 1fr',
+                                                gap: '20px',
+                                                padding: '20px',
+                                                backgroundColor: '#f8fafc',
+                                                borderRadius: '20px',
+                                                border: '1px solid #f1f5f9'
                                             }}>
-                                                <Sparkles size={14} /> ANC ACTIVE
+                                                <div>
+                                                    <div style={{ color: '#94a3b8', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.05em' }}>Aadhar</div>
+                                                    <div style={{ fontWeight: '700', color: '#334155', fontSize: '0.95rem' }}>{member.aadhar_number}</div>
+                                                </div>
+                                                <div>
+                                                    <div style={{ color: '#94a3b8', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.05em' }}>Education</div>
+                                                    <div style={{ fontWeight: '700', color: '#334155', fontSize: '0.95rem' }}>{member.education}</div>
+                                                </div>
                                             </div>
-                                        )}
 
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
-                                            <div style={{ backgroundColor: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
-                                                <User color="#64748b" />
-                                            </div>
+                                            {/* Health Section */}
                                             <div>
-                                                <h4 style={{ margin: 0 }}>{member.full_name}</h4>
-                                                <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
-                                                    {member.relation_to_head} • {member.age} yrs • {member.gender}
-                                                </p>
+                                                <div style={{ color: '#94a3b8', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <HeartPulse size={12} color="#ef4444" /> Health History
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                                    {member.diseases?.length > 0 && member.diseases[0] !== 'None' ? member.diseases.map(d => (
+                                                        <span key={d} style={{
+                                                            backgroundColor: '#fee2e2',
+                                                            color: '#dc2626',
+                                                            padding: '6px 12px',
+                                                            borderRadius: '8px',
+                                                            fontSize: '0.75rem',
+                                                            fontWeight: '700',
+                                                            border: '1px solid #fecaca'
+                                                        }}>{d}</span>
+                                                    )) : (
+                                                        <span style={{
+                                                            color: '#10b981',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '6px',
+                                                            fontSize: '0.85rem',
+                                                            fontWeight: '700',
+                                                            backgroundColor: '#ecfdf5',
+                                                            padding: '6px 12px',
+                                                            borderRadius: '8px',
+                                                            border: '1px solid #d1fae5'
+                                                        }}>
+                                                            <ShieldCheck size={16} /> Healthy
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', padding: '15px', backgroundColor: '#f8fafc', borderRadius: '12px', fontSize: '0.9rem' }}>
-                                            <div>
-                                                <div style={{ color: '#94a3b8', fontSize: '0.7rem', textTransform: 'uppercase' }}>Aadhar</div>
-                                                <div style={{ fontWeight: '500' }}>{member.aadhar_number}</div>
-                                            </div>
-                                            <div>
-                                                <div style={{ color: '#94a3b8', fontSize: '0.7rem', textTransform: 'uppercase' }}>Education</div>
-                                                <div style={{ fontWeight: '500' }}>{member.education}</div>
-                                            </div>
-                                        </div>
-
-                                        <div style={{ marginTop: '20px' }}>
-                                            <div style={{ color: '#94a3b8', fontSize: '0.7rem', textTransform: 'uppercase', marginBottom: '8px' }}>Health History</div>
-                                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                                {member.diseases?.length > 0 && member.diseases[0] !== 'None' ? member.diseases.map(d => (
-                                                    <span key={d} style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '4px 8px', borderRadius: '6px', fontSize: '0.75rem' }}>{d}</span>
-                                                )) : <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem' }}><ShieldCheck size={14} /> Healthy</span>}
-                                            </div>
-                                        </div>
-
-                                        <MemberSurveys memberId={member.id} isPregnant={member.pregnant} />
-                                    </div>
-                                ))}
+                                            <MemberSurveys memberId={member.id} isPregnant={member.pregnant} />
+                                        </motion.div>
+                                    ))}
                             </div>
                         </div>
                     )}
