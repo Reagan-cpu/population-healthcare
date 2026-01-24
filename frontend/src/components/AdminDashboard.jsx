@@ -61,7 +61,7 @@ const AdminDashboard = () => {
     return (
         <div className="container" style={{ maxWidth: '1400px', padding: '20px' }}>
             {/* Header Section */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
+            <div className="admin-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '2.5rem', background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                         Admin Intelligence
@@ -91,7 +91,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Tab Navigation */}
-            <div style={{
+            <div className="admin-tabs" style={{
                 display: 'flex',
                 gap: '8px',
                 backgroundColor: '#f1f5f9',
@@ -130,7 +130,7 @@ const AdminDashboard = () => {
                     transition={{ duration: 0.2 }}
                 >
                     {activeTab === 'overview' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+                        <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
                             <StatsCard
                                 icon={<Users color="#3b82f6" size={32} />}
                                 label="Total Population Records"

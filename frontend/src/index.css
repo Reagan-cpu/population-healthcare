@@ -9,6 +9,13 @@
 
 html {
   scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
 }
 
 body {
@@ -42,6 +49,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  white-space: nowrap;
 }
 
 .btn-primary {
@@ -97,6 +105,60 @@ textarea:focus {
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px 20px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 15px !important;
+  }
+
+  .navbar {
+    padding: 16px 15px !important;
+    gap: 15px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .navbar span {
+    font-size: 1.1rem !important;
+  }
+
+  .survey-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .survey-grid>div {
+    grid-column: 1 / -1 !important;
+  }
+
+  .disease-grid,
+  .screening-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .admin-header {
+    flex-direction: column !important;
+    gap: 20px !important;
+    align-items: stretch !important;
+  }
+
+  .search-container {
+    width: 100% !important;
+  }
+
+  .search-container input {
+    width: 100% !important;
+  }
+
+  .admin-tabs {
+    width: 100% !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    justify-content: flex-start !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* Custom Scrollbar */

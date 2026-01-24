@@ -177,7 +177,7 @@ const SurveyForm = ({ onSuccess }) => {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <form onSubmit={handleSubmit} className="survey-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 {/* Common Details */}
                 <div style={{ gridColumn: 'span 2' }}>
                     <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px', color: '#64748b' }}>
@@ -234,7 +234,7 @@ const SurveyForm = ({ onSuccess }) => {
                     <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px', color: '#ef4444' }}>
                         <HeartPulse size={18} /> Existing Diseases
                     </h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', backgroundColor: '#fef2f2', padding: '15px', borderRadius: '12px' }}>
+                    <div className="disease-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', backgroundColor: '#fef2f2', padding: '15px', borderRadius: '12px' }}>
                         {diseaseOptions.map(disease => (
                             <label key={disease} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
                                 <input
@@ -312,7 +312,7 @@ const SurveyForm = ({ onSuccess }) => {
                             <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px', color: '#dc2626' }}>
                                 <AlertCircle size={18} /> Medical Screening
                             </h4>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                            <div className="screening-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
                                 <div className="form-group">
                                     <label style={{ fontSize: '0.8rem' }}>Severe Acute Malnutrition (SAM)?</label>
                                     <select name="anc_sam_status" value={formData.anc_details.sam_status} onChange={handleChange}>

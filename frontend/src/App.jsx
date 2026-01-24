@@ -1,15 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SurveyForm from './components/SurveyForm';
 import AdminDashboard from './components/AdminDashboard';
-import { Activity, ClipboardList, LayoutDashboard } from 'lucide-react';
+import AdminLogin from './components/AdminLogin';
+import { Activity, ClipboardList, LayoutDashboard, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function App() {
     const [view, setView] = useState('survey'); // 'survey' or 'admin'
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    useEffect(() => {
+        const authStatus = localStorage.getItem('admin_auth');
+        if (authStatus === 'true') {
+            setIsAuthenticated(true);
+        }
+    }, []);
+
+    const handleLogin = () => {
+        setIsAuthenticated(true);
+        localStorage.setItem('admin_auth', 'true');
+    };
+
+    const handleLogout = () => {
+        setIsAuthenticated(false);
+        localStorage.removeItem('admin_auth');
+        setView('survey');
+    };
 
     return (
         <div className="app-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-            <nav style={{
+            <nav className="navbar" style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -56,13 +76,34 @@ function App() {
                         icon={<LayoutDashboard size={18} />}
                         label="Admin Dashboard"
                     />
+                    {isAuthenticated && view === 'admin' && (
+                        <button
+                            onClick={handleLogout}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '10px 20px',
+                                borderRadius: '11px',
+                                border: 'none',
+                                backgroundColor: 'transparent',
+                                color: '#ef4444',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <LogOut size={18} />
+                            <span style={{ fontSize: '0.95rem' }}>Logout</span>
+                        </button>
+                    )}
                 </div>
             </nav>
 
             <main style={{ flex: 1, padding: '40px 20px' }}>
                 <AnimatePresence mode="wait">
                     <motion.div
-                        key={view}
+                        key={view + (isAuthenticated ? '_auth' : '_unauth')}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
@@ -73,7 +114,7 @@ function App() {
                                 <SurveyForm onSuccess={() => { }} />
                             </div>
                         ) : (
-                            <AdminDashboard />
+                            isAuthenticated ? <AdminDashboard /> : <AdminLogin onLogin={handleLogin} />
                         )}
                     </motion.div>
                 </AnimatePresence>
