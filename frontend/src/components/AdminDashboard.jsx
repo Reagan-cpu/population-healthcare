@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, User, Home, MapPin, Search, Activity, Sparkles, Building2, ChevronRight, LayoutDashboard, Database, ArrowLeft, HeartPulse, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Users, User, Home, MapPin, Search, Activity, Sparkles, Building2, ChevronRight, LayoutDashboard, Database, ArrowLeft, HeartPulse, ShieldCheck, AlertCircle, Baby, Zap } from 'lucide-react';
 
 const AdminDashboard = () => {
     const [households, setHouseholds] = useState([]);
@@ -252,6 +252,47 @@ const AdminDashboard = () => {
                                 <h3 style={{ margin: 0 }}>Residents of {currentNav.label}</h3>
                             </div>
 
+                            {/* Household Children Summary */}
+                            {(() => {
+                                const house = households.find(h => h.id === currentNav.id);
+                                if (!house) return null;
+                                return (
+                                    <div className="glass-card" style={{
+                                        padding: '25px',
+                                        backgroundColor: '#ffffff',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '24px',
+                                        boxShadow: '0 4px 20px -5px rgba(0,0,0,0.05)',
+                                        position: 'relative',
+                                        overflow: 'hidden'
+                                    }}>
+                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#8b5cf6' }}></div>
+
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div style={{ backgroundColor: '#f5f3ff', padding: '10px', borderRadius: '14px' }}>
+                                                    <Baby size={22} color="#8b5cf6" />
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Household Demographic Overview</div>
+                                                    <h4 style={{ margin: 0, color: '#1e293b' }}>Children and Adolescents</h4>
+                                                </div>
+                                            </div>
+                                            <div style={{ backgroundColor: '#f8fafc', padding: '6px 14px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', color: '#64748b', border: '1px solid #e2e8f0' }}>
+                                                <Zap size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} color="#f59e0b" />
+                                                Live Registry Data
+                                            </div>
+                                        </div>
+
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                                            <MetricSummary label="Infants (0-2 Yrs)" m={house.child_0_2_m} f={house.child_0_2_f} color="#3b82f6" />
+                                            <MetricSummary label="Early Child (2-5 Yrs)" m={house.child_2_5_m} f={house.child_2_5_f} color="#10b981" />
+                                            <MetricSummary label="Teen/Adolescent (10-15 Yrs)" m={house.child_10_15_m} f={house.child_10_15_f} color="#f59e0b" />
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '30px' }}>
                                 {households
                                     .find(h => h.id === currentNav.id).household_members
@@ -450,6 +491,40 @@ const MemberSurveys = ({ memberId, isPregnant }) => {
         </>
     );
 };
+
+const MetricSummary = ({ label, m, f, color }) => (
+    <div style={{
+        backgroundColor: '#f8fafc',
+        padding: '16px 20px',
+        borderRadius: '20px',
+        border: '1px solid #f1f5f9',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px'
+    }}>
+        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#64748b' }}>{label}</div>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'white', padding: '8px 12px', borderRadius: '12px', border: '1px solid #e2e8f0 shadow-sm' }}>
+                <div style={{ backgroundColor: '#eff6ff', padding: '6px', borderRadius: '8px' }}>
+                    <User size={14} color="#3b82f6" fill="#3b82f6" />
+                </div>
+                <div>
+                    <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase' }}>Boys</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#1e293b' }}>{m || 0}</div>
+                </div>
+            </div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'white', padding: '8px 12px', borderRadius: '12px', border: '1px solid #e2e8f0 shadow-sm' }}>
+                <div style={{ backgroundColor: '#fdf2f8', padding: '6px', borderRadius: '8px' }}>
+                    <User size={14} color="#db2777" fill="#db2777" />
+                </div>
+                <div>
+                    <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase' }}>Girls</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#1e293b' }}>{f || 0}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
 
 const StatsCard = ({ icon, label, value, color }) => (
     <div className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>

@@ -9,7 +9,13 @@ const SurveyForm = ({ onSuccess }) => {
         house_number: '',
         head_name: '',
         family_mobile: '',
-        member_count: 1
+        member_count: 1,
+        child_0_2_m: 0,
+        child_0_2_f: 0,
+        child_2_5_m: 0,
+        child_2_5_f: 0,
+        child_10_15_m: 0,
+        child_10_15_f: 0
     });
 
     const [members, setMembers] = useState([createEmptyMember(true)]);
@@ -50,6 +56,17 @@ const SurveyForm = ({ onSuccess }) => {
 
     const handleFamilyChange = (e) => {
         const { name, value } = e.target;
+
+        // Mobile Number Validation: Only digits, max 10
+        if (name === 'family_mobile') {
+            const onlyNums = value.replace(/[^0-9]/g, '');
+            if (onlyNums.length <= 10) {
+                setFamilyData(prev => ({ ...prev, [name]: onlyNums }));
+            }
+            return;
+        }
+
+
         setFamilyData(prev => ({ ...prev, [name]: value }));
 
         if (name === 'head_name') {
@@ -74,6 +91,7 @@ const SurveyForm = ({ onSuccess }) => {
             }
         }
     };
+
 
     const calculateAge = (dob) => {
         if (!dob) return '';
@@ -142,6 +160,14 @@ const SurveyForm = ({ onSuccess }) => {
             return;
         }
 
+        // Phone Length Validation
+        if (familyData.family_mobile.length !== 10) {
+            setMessage({ type: 'error', text: 'Please enter a valid 10-digit mobile number.' });
+            setLoading(false);
+            return;
+        }
+
+
         try {
             const { data: household, error: hError } = await supabase
                 .from('households')
@@ -149,7 +175,13 @@ const SurveyForm = ({ onSuccess }) => {
                     village: familyData.village,
                     house_number: familyData.house_number,
                     head_name: familyData.head_name,
-                    family_mobile: familyData.family_mobile
+                    family_mobile: familyData.family_mobile,
+                    child_0_2_m: parseInt(familyData.child_0_2_m),
+                    child_0_2_f: parseInt(familyData.child_0_2_f),
+                    child_2_5_m: parseInt(familyData.child_2_5_m),
+                    child_2_5_f: parseInt(familyData.child_2_5_f),
+                    child_10_15_m: parseInt(familyData.child_10_15_m),
+                    child_10_15_f: parseInt(familyData.child_10_15_f)
                 }])
                 .select()
                 .single();
@@ -220,7 +252,13 @@ const SurveyForm = ({ onSuccess }) => {
             house_number: '',
             head_name: '',
             family_mobile: '',
-            member_count: 1
+            member_count: 1,
+            child_0_2_m: 0,
+            child_0_2_f: 0,
+            child_2_5_m: 0,
+            child_2_5_f: 0,
+            child_10_15_m: 0,
+            child_10_15_f: 0
         });
         setMembers([createEmptyMember(true)]);
         setExpandedMember(0);
@@ -293,6 +331,33 @@ const SurveyForm = ({ onSuccess }) => {
                             <div style={{ position: 'relative' }}>
                                 <Users size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)' }} />
                                 <input type="number" name="member_count" value={familyData.member_count} onChange={handleFamilyChange} min="1" max="25" required />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ marginTop: '30px', paddingTop: '25px', borderTop: '1px solid #e2e8f0' }}>
+                        <h5 style={{ margin: '0 0 20px 0', fontSize: '1rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Children Demographic Summary</h5>
+                        <div className="survey-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
+                            <div className="form-group">
+                                <label>0-2 Years (Male/Female)</label>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <input type="number" name="child_0_2_m" value={familyData.child_0_2_m} onChange={handleFamilyChange} min="0" placeholder="M" />
+                                    <input type="number" name="child_0_2_f" value={familyData.child_0_2_f} onChange={handleFamilyChange} min="0" placeholder="F" />
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>2-5 Years (Male/Female)</label>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <input type="number" name="child_2_5_m" value={familyData.child_2_5_m} onChange={handleFamilyChange} min="0" placeholder="M" />
+                                    <input type="number" name="child_2_5_f" value={familyData.child_2_5_f} onChange={handleFamilyChange} min="0" placeholder="F" />
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>10-15 Years (Male/Female)</label>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <input type="number" name="child_10_15_m" value={familyData.child_10_15_m} onChange={handleFamilyChange} min="0" placeholder="M" />
+                                    <input type="number" name="child_10_15_f" value={familyData.child_10_15_f} onChange={handleFamilyChange} min="0" placeholder="F" />
+                                </div>
                             </div>
                         </div>
                     </div>
