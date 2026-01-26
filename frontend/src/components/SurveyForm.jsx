@@ -22,6 +22,10 @@ const SurveyForm = ({ onSuccess }) => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
     const [expandedMember, setExpandedMember] = useState(0);
+    const [validationErrors, setValidationErrors] = useState({
+        family_mobile: '',
+        members: {} // index: { aadhar: '', abha: '' }
+    });
 
     const diseaseOptions = [
         'Diabetes', 'Hypertension', 'Thyroid', 'Asthma',
@@ -35,6 +39,7 @@ const SurveyForm = ({ onSuccess }) => {
             age: '',
             gender: '',
             aadhar_number: '',
+            abha_number: '',
             relation_to_head: isHead ? 'Self (Head)' : '',
             education: '',
             caste: '',
@@ -62,10 +67,10 @@ const SurveyForm = ({ onSuccess }) => {
             const onlyNums = value.replace(/[^0-9]/g, '');
             if (onlyNums.length <= 10) {
                 setFamilyData(prev => ({ ...prev, [name]: onlyNums }));
+                setValidationErrors(prev => ({ ...prev, family_mobile: '' }));
             }
             return;
         }
-
 
         setFamilyData(prev => ({ ...prev, [name]: value }));
 
@@ -115,6 +120,26 @@ const SurveyForm = ({ onSuccess }) => {
                 ...updatedMembers[index].anc_details,
                 [field]: value
             };
+        } else if (name === 'aadhar_number') {
+            const onlyNums = value.replace(/[^0-9]/g, '');
+            if (onlyNums.length <= 12) {
+                updatedMembers[index][name] = onlyNums;
+                setValidationErrors(prev => {
+                    const newMembers = { ...prev.members };
+                    newMembers[index] = { ...newMembers[index], aadhar: '' };
+                    return { ...prev, members: newMembers };
+                });
+            }
+        } else if (name === 'abha_number') {
+            const onlyNums = value.replace(/[^0-9]/g, '');
+            if (onlyNums.length <= 14) {
+                updatedMembers[index][name] = onlyNums;
+                setValidationErrors(prev => {
+                    const newMembers = { ...prev.members };
+                    newMembers[index] = { ...newMembers[index], abha: '' };
+                    return { ...prev, members: newMembers };
+                });
+            }
         } else {
             updatedMembers[index][name] = value;
             if (name === 'dob') {
@@ -127,6 +152,76 @@ const SurveyForm = ({ onSuccess }) => {
 
         setMembers(updatedMembers);
     };
+
+    // Real-time Phone Uniqueness Check
+    useEffect(() => {
+        const checkPhone = async () => {
+            if (familyData.family_mobile.length === 10) {
+                const { data, error } = await supabase
+                    .from('households')
+                    .select('id')
+                    .eq('family_mobile', familyData.family_mobile)
+                    .maybeSingle();
+
+                if (data) {
+                    setValidationErrors(prev => ({ ...prev, family_mobile: 'This phone number is already registered in another household.' }));
+                }
+            }
+        };
+
+        const timer = setTimeout(checkPhone, 500);
+        return () => clearTimeout(timer);
+    }, [familyData.family_mobile]);
+
+    // Real-time Aadhar Uniqueness Check
+    useEffect(() => {
+        const checkAadhars = async () => {
+            const checks = members.map(async (member, index) => {
+                const results = { index, aadharError: '', abhaError: '' };
+
+                // Aadhar Check
+                if (member.aadhar_number.length === 12) {
+                    const { data } = await supabase
+                        .from('household_members')
+                        .select('id')
+                        .eq('aadhar_number', member.aadhar_number)
+                        .maybeSingle();
+                    if (data) results.aadharError = 'This Aadhar number is already registered in the system.';
+                }
+
+                // ABHA Check
+                if (member.abha_number.length === 14) {
+                    const { data } = await supabase
+                        .from('household_members')
+                        .select('id')
+                        .eq('abha_number', member.abha_number)
+                        .maybeSingle();
+                    if (data) results.abhaError = 'This ABHA number is already registered in the system.';
+                }
+
+                return results;
+            });
+
+            const results = await Promise.all(checks);
+            const newMembersErrors = {};
+            results.forEach(res => {
+                if (res.aadharError || res.abhaError) {
+                    newMembersErrors[res.index] = {
+                        aadhar: res.aadharError,
+                        abha: res.abhaError
+                    };
+                }
+            });
+
+            setValidationErrors(prev => ({
+                ...prev,
+                members: { ...prev.members, ...newMembersErrors }
+            }));
+        };
+
+        const timer = setTimeout(checkAadhars, 600);
+        return () => clearTimeout(timer);
+    }, [members.map(m => m.aadhar_number + m.abha_number).join(',')]);
 
     const handleDiseaseToggle = (index, disease) => {
         const updatedMembers = [...members];
@@ -153,6 +248,36 @@ const SurveyForm = ({ onSuccess }) => {
         setLoading(true);
         setMessage({ type: '', text: '' });
 
+        // Duplicate/Registration Checks
+        if (validationErrors.family_mobile) {
+            setMessage({ type: 'error', text: validationErrors.family_mobile });
+            setLoading(false);
+            return;
+        }
+
+        const aadharErrors = Object.values(validationErrors.members).some(m => m.aadhar || m.abha);
+        if (aadharErrors) {
+            setMessage({ type: 'error', text: 'One or more Aadhar or ABHA numbers are already registered.' });
+            setLoading(false);
+            return;
+        }
+
+        // Aadhar & ABHA Length & Integrity Validation
+        const invalidAadharLog = members.find(m => m.aadhar_number.length !== 12);
+        if (invalidAadharLog) {
+            setMessage({ type: 'error', text: `Aadhar for ${invalidAadharLog.full_name || 'Member'} must be exactly 12 digits.` });
+            setLoading(false);
+            return;
+        }
+
+        const invalidAbhaLog = members.find(m => m.abha_number && m.abha_number.length !== 14);
+        if (invalidAbhaLog) {
+            setMessage({ type: 'error', text: `ABHA number for ${invalidAbhaLog.full_name || 'Member'} must be exactly 14 digits if provided.` });
+            setLoading(false);
+            return;
+        }
+
+        // Duplicate Aadhar within form
         const aadhars = members.map(m => m.aadhar_number.trim()).filter(a => a !== '');
         if (new Set(aadhars).size !== aadhars.length) {
             setMessage({ type: 'error', text: 'Duplicate Aadhar Card Numbers detected within the form.' });
@@ -199,6 +324,7 @@ const SurveyForm = ({ onSuccess }) => {
                         gender: member.gender,
                         relation_to_head: member.relation_to_head,
                         aadhar_number: member.aadhar_number,
+                        abha_number: member.abha_number || null,
                         diseases: member.diseases,
                         education: member.education,
                         caste: member.caste,
@@ -323,13 +449,25 @@ const SurveyForm = ({ onSuccess }) => {
 
                         <div className="form-group">
                             <label>Registered Mobile</label>
-                            <input type="tel" name="family_mobile" value={familyData.family_mobile} onChange={handleFamilyChange} required placeholder="10-digit number" />
+                            <input
+                                type="tel"
+                                name="family_mobile"
+                                value={familyData.family_mobile}
+                                onChange={handleFamilyChange}
+                                required
+                                placeholder="10-digit number"
+                                style={validationErrors.family_mobile ? { borderColor: '#ef4444' } : {}}
+                            />
+                            {validationErrors.family_mobile && (
+                                <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
+                                    {validationErrors.family_mobile}
+                                </span>
+                            )}
                         </div>
 
                         <div className="form-group">
                             <label>Total Members</label>
                             <div style={{ position: 'relative' }}>
-                                <Users size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)' }} />
                                 <input type="number" name="member_count" value={familyData.member_count} onChange={handleFamilyChange} min="1" max="25" required />
                             </div>
                         </div>
@@ -432,7 +570,35 @@ const SurveyForm = ({ onSuccess }) => {
                                                     </div>
                                                     <div className="form-group">
                                                         <label>Aadhar Number</label>
-                                                        <input name="aadhar_number" value={member.aadhar_number} onChange={(e) => handleMemberChange(index, e)} required maxLength="12" />
+                                                        <input
+                                                            name="aadhar_number"
+                                                            value={member.aadhar_number}
+                                                            onChange={(e) => handleMemberChange(index, e)}
+                                                            required
+                                                            maxLength="12"
+                                                            style={validationErrors.members[index]?.aadhar ? { borderColor: '#ef4444' } : {}}
+                                                        />
+                                                        {validationErrors.members[index]?.aadhar && (
+                                                            <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
+                                                                {validationErrors.members[index].aadhar}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="form-group">
+                                                        <label>ABHA Number (Optional)</label>
+                                                        <input
+                                                            name="abha_number"
+                                                            value={member.abha_number}
+                                                            onChange={(e) => handleMemberChange(index, e)}
+                                                            maxLength="14"
+                                                            placeholder="14-digit number"
+                                                            style={validationErrors.members[index]?.abha ? { borderColor: '#ef4444' } : {}}
+                                                        />
+                                                        {validationErrors.members[index]?.abha && (
+                                                            <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
+                                                                {validationErrors.members[index].abha}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <div className="form-group">
                                                         <label>Relation to Head</label>
@@ -470,7 +636,7 @@ const SurveyForm = ({ onSuccess }) => {
                                             {/* Section: Medical History */}
                                             <div style={{ marginBottom: '35px' }}>
                                                 <h5 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444', marginBottom: '15px', fontSize: '1.1rem' }}>
-                                                    <HeartPulse size={18} /> Clinical History
+                                                    <HeartPulse size={18} /> Existing Diseases
                                                 </h5>
                                                 <div style={{
                                                     display: 'grid',

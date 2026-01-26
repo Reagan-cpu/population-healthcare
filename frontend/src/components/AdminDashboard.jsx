@@ -85,7 +85,7 @@ const AdminDashboard = () => {
             {/* Header */}
             <div className="admin-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' }}>
                 <div>
-                    <h1 style={{ margin: 0, fontSize: '2.5rem', background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    <h1 style={{ margin: 0, fontSize: '2.5rem', color: '#1e293b', fontWeight: '800' }}>
                         Admin Intelligence
                     </h1>
                     <p style={{ color: '#64748b', fontSize: '1rem', marginTop: '8px' }}>Relational Population Health Ecosystem</p>
@@ -371,8 +371,12 @@ const AdminDashboard = () => {
                                                 border: '1px solid #f1f5f9'
                                             }}>
                                                 <div>
-                                                    <div style={{ color: '#94a3b8', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.05em' }}>Aadhar</div>
+                                                    <div style={{ color: '#94a3b8', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.05em' }}>Aadhar No.</div>
                                                     <div style={{ fontWeight: '700', color: '#334155', fontSize: '0.95rem' }}>{member.aadhar_number}</div>
+                                                </div>
+                                                <div>
+                                                    <div style={{ color: '#94a3b8', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.05em' }}>ABHA No.</div>
+                                                    <div style={{ fontWeight: '700', color: '#334155', fontSize: '0.95rem' }}>{member.abha_number || 'N/A'}</div>
                                                 </div>
                                                 <div>
                                                     <div style={{ color: '#94a3b8', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.05em' }}>Education</div>
@@ -456,7 +460,7 @@ const MemberSurveys = ({ memberId, isPregnant }) => {
                     </h5>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.85rem' }}>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ color: '#16653490', fontSize: '0.7rem', fontWeight: '700', textTransform: 'uppercase' }}>LMP Date</span>
+                            <span style={{ color: '#16653490', fontSize: '0.7rem', fontWeight: '700', textTransform: 'uppercase' }}>Last Menstrual Period Date</span>
                             <span style={{ fontWeight: '600' }}>{anc.lmp_date || 'N/A'}</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
