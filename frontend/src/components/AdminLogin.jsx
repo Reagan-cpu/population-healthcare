@@ -22,7 +22,7 @@ const AdminLogin = ({ onLogin }) => {
             const { data, error: queryError } = await supabase
                 .from('admin_portal')
                 .select('*')
-                .eq('username', credentials.username)
+                .eq('username', credentials.username.trim())
                 .eq('password', credentials.password)
                 .single();
 
