@@ -26,6 +26,9 @@ const SurveyForm = ({ onSuccess }) => {
         family_mobile: '',
         members: {} // index: { aadhar: '', abha: '' }
     });
+    const [showMismatchError, setShowMismatchError] = useState(false);
+    const [showDemographicError, setShowDemographicError] = useState(false);
+    const relationOptions = ['Spouse', 'Child', 'Parent', 'Sibling', 'Grandparent', 'Other'];
 
     const diseaseOptions = [
         'Diabetes', 'Hypertension', 'Thyroid', 'Asthma',
@@ -84,16 +87,8 @@ const SurveyForm = ({ onSuccess }) => {
 
         if (name === 'member_count') {
             const count = parseInt(value) || 0;
-            if (count > 0) {
-                setMembers(prev => {
-                    if (prev.length < count) {
-                        const newMembers = Array(count - prev.length).fill(null).map(() => createEmptyMember());
-                        return [...prev, ...newMembers];
-                    } else {
-                        return prev.slice(0, count);
-                    }
-                });
-            }
+            setFamilyData(prev => ({ ...prev, [name]: value }));
+            return;
         }
     };
 
@@ -108,6 +103,32 @@ const SurveyForm = ({ onSuccess }) => {
             age--;
         }
         return age >= 0 ? age : 0;
+    };
+
+    const getDemographicMismatch = () => {
+        const childConstraints = [
+            { field: 'child_0_2_m', gender: 'Male', minAge: 0, maxAge: 2 },
+            { field: 'child_0_2_f', gender: 'Female', minAge: 0, maxAge: 2 },
+            { field: 'child_2_5_m', gender: 'Male', minAge: 3, maxAge: 5 },
+            { field: 'child_2_5_f', gender: 'Female', minAge: 3, maxAge: 5 },
+            { field: 'child_10_15_m', gender: 'Male', minAge: 10, maxAge: 15 },
+            { field: 'child_10_15_f', gender: 'Female', minAge: 10, maxAge: 15 }
+        ];
+
+        for (const constraint of childConstraints) {
+            const requiredCount = parseInt(familyData[constraint.field]) || 0;
+            if (requiredCount > 0) {
+                const actualCount = members.filter(m =>
+                    m.relation_to_head === 'Child' &&
+                    m.gender === constraint.gender &&
+                    m.age >= constraint.minAge &&
+                    m.age <= constraint.maxAge
+                ).length;
+
+                if (actualCount < requiredCount) return true;
+            }
+        }
+        return false;
     };
 
     const handleMemberChange = (index, e) => {
@@ -126,7 +147,11 @@ const SurveyForm = ({ onSuccess }) => {
                 updatedMembers[index][name] = onlyNums;
                 setValidationErrors(prev => {
                     const newMembers = { ...prev.members };
-                    newMembers[index] = { ...newMembers[index], aadhar: '' };
+                    let aadharError = '';
+                    if (onlyNums.length > 0 && onlyNums.length < 12) {
+                        aadharError = 'Aadhar number must be exactly 12 digits.';
+                    }
+                    newMembers[index] = { ...newMembers[index], aadhar: aadharError };
                     return { ...prev, members: newMembers };
                 });
             }
@@ -243,8 +268,35 @@ const SurveyForm = ({ onSuccess }) => {
         setMembers(updatedMembers);
     };
 
+    const handleAddMember = () => {
+        setMembers(prev => [...prev, createEmptyMember()]);
+        setExpandedMember(members.length);
+    };
+
+    const handleDeleteMember = (index, e) => {
+        e.stopPropagation();
+        if (index === 0) return;
+        setMembers(prev => prev.filter((_, i) => i !== index));
+        if (expandedMember === index) setExpandedMember(-1);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Mismatch validation
+        const totalMismatch = parseInt(familyData.member_count) !== members.length;
+        const demographicMismatch = getDemographicMismatch();
+
+        if (totalMismatch || demographicMismatch) {
+            setShowMismatchError(totalMismatch);
+            setShowDemographicError(demographicMismatch);
+            setLoading(false);
+            return;
+        }
+
+        setShowMismatchError(false);
+        setShowDemographicError(false);
+
         setLoading(true);
         setMessage({ type: '', text: '' });
 
@@ -257,15 +309,7 @@ const SurveyForm = ({ onSuccess }) => {
 
         const aadharErrors = Object.values(validationErrors.members).some(m => m.aadhar || m.abha);
         if (aadharErrors) {
-            setMessage({ type: 'error', text: 'One or more Aadhar or ABHA numbers are already registered.' });
-            setLoading(false);
-            return;
-        }
-
-        // Aadhar & ABHA Length & Integrity Validation
-        const invalidAadharLog = members.find(m => m.aadhar_number.length !== 12);
-        if (invalidAadharLog) {
-            setMessage({ type: 'error', text: `Aadhar for ${invalidAadharLog.full_name || 'Member'} must be exactly 12 digits.` });
+            setMessage({ type: 'error', text: 'Please correct the errors in identity numbers before submitting.' });
             setLoading(false);
             return;
         }
@@ -388,6 +432,8 @@ const SurveyForm = ({ onSuccess }) => {
         });
         setMembers([createEmptyMember(true)]);
         setExpandedMember(0);
+        setShowMismatchError(false);
+        setShowDemographicError(false);
     };
 
     return (
@@ -468,7 +514,22 @@ const SurveyForm = ({ onSuccess }) => {
                         <div className="form-group">
                             <label>Total Members</label>
                             <div style={{ position: 'relative' }}>
-                                <input type="number" name="member_count" value={familyData.member_count} onChange={handleFamilyChange} min="1" max="25" required />
+                                <input
+                                    type="number"
+                                    name="member_count"
+                                    value={familyData.member_count}
+                                    onChange={handleFamilyChange}
+                                    min="1"
+                                    max="25"
+                                    required
+                                    style={showMismatchError && parseInt(familyData.member_count) !== members.length ? { borderColor: '#ef4444' } : {}}
+                                />
+                                {showMismatchError && parseInt(familyData.member_count) !== members.length && (
+                                    <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <AlertCircle size={12} />
+                                        Mismatch Error: Total membership count must match the total number of forms generated.
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -498,6 +559,28 @@ const SurveyForm = ({ onSuccess }) => {
                                 </div>
                             </div>
                         </div>
+
+                        {showDemographicError && getDemographicMismatch() && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                style={{
+                                    marginTop: '20px',
+                                    padding: '15px',
+                                    backgroundColor: '#fef2f2',
+                                    border: '1px solid #fee2e2',
+                                    borderRadius: '12px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    color: '#ef4444',
+                                    fontSize: '0.9rem'
+                                }}
+                            >
+                                <AlertCircle size={18} />
+                                Mismatch Error: Demographic summary doesn't match individual health profiles (Check Relation/Gender/Age for Children).
+                            </motion.div>
+                        )}
                     </div>
                 </div>
 
@@ -507,6 +590,25 @@ const SurveyForm = ({ onSuccess }) => {
                         <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px', color: '#1e293b', fontSize: '1.2rem' }}>
                             <User size={22} color="#6366f1" /> Resident Health Profiles
                         </h4>
+                        <button
+                            type="button"
+                            onClick={handleAddMember}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '10px 20px',
+                                backgroundColor: '#eff6ff',
+                                color: '#3b82f6',
+                                border: '1px solid #dbeafe',
+                                borderRadius: '12px',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <Plus size={18} /> Add Member
+                        </button>
                     </div>
 
                     {members.map((member, index) => (
@@ -545,7 +647,28 @@ const SurveyForm = ({ onSuccess }) => {
                                         {index === 0 && <span style={{ marginLeft: '10px', fontSize: '0.8rem', color: '#64748b' }}>(Head of Household)</span>}
                                     </span>
                                 </div>
-                                {expandedMember === index ? <ChevronUp size={22} color="#3b82f6" /> : <ChevronDown size={22} color="#64748b" />}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                    {index !== 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => handleDeleteMember(index, e)}
+                                            style={{
+                                                padding: '8px',
+                                                borderRadius: '8px',
+                                                border: 'none',
+                                                backgroundColor: 'transparent',
+                                                color: '#94a3b8',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
+                                            onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    )}
+                                    {expandedMember === index ? <ChevronUp size={22} color="#3b82f6" /> : <ChevronDown size={22} color="#64748b" />}
+                                </div>
                             </div>
 
                             <AnimatePresence>
@@ -603,7 +726,18 @@ const SurveyForm = ({ onSuccess }) => {
                                                     <div className="form-group">
                                                         <label>Relation to Head</label>
                                                         {index === 0 ? <input value="Self (Head)" disabled style={{ backgroundColor: '#f8fafc' }} /> :
-                                                            <input name="relation_to_head" value={member.relation_to_head} onChange={(e) => handleMemberChange(index, e)} required placeholder="e.g. Spouse" />}
+                                                            <select
+                                                                name="relation_to_head"
+                                                                value={member.relation_to_head}
+                                                                onChange={(e) => handleMemberChange(index, e)}
+                                                                required
+                                                            >
+                                                                <option value="">Select Relation</option>
+                                                                {relationOptions.map(opt => (
+                                                                    <option key={opt} value={opt}>{opt}</option>
+                                                                ))}
+                                                            </select>
+                                                        }
                                                     </div>
                                                     <div className="form-group">
                                                         <label>Gender Identity</label>
